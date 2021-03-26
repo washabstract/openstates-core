@@ -42,6 +42,7 @@ CONTACT_TYPES = _keys(CONTACT_TYPE_CHOICES)
 
 JURISDICTION_CLASSIFICATION_CHOICES = (
     ("state", "State"),
+    ("country", "Country"),
     ("municipality", "Municipality"),
 )
 JURISDICTION_CLASSIFICATIONS = _keys(JURISDICTION_CLASSIFICATION_CHOICES)
@@ -95,6 +96,7 @@ BILL_RELATION_TYPE_CHOICES = (
     ("prior-session", "Prior Session"),  # an introduction from a prior session
     ("replaced-by", "Replaced By"),  # a bill has been replaced by another
     ("replaces", "Replaces"),  # a bill that replaces another
+    ("related", "Related"),  # otherwise related
 )
 BILL_RELATION_TYPES = _keys(BILL_RELATION_TYPE_CHOICES)
 

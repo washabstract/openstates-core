@@ -39,7 +39,10 @@ def create_chamber(juris, parent, chamber):
             organization=post_parent,
             division=post_div,
             # TODO: allow changing role & max_memberships
-            defaults=dict(role=chamber.title, maximum_memberships=district.num_seats),
+            defaults=dict(
+                role=district.title_override or chamber.title,
+                maximum_memberships=district.num_seats,
+            ),
         )
 
 
@@ -51,7 +54,7 @@ def create_full_jurisdiction(state):
         id=state.jurisdiction_id,
         name=state.name,
         division=div,
-        classification="state",
+        classification="state" if state.abbr != "US" else "country",
         defaults=dict(url=state.url),
     )
     leg, created = Organization.objects.get_or_create(

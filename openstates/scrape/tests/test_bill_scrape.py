@@ -43,7 +43,8 @@ def test_bill_type_setting():
         title="the title",
         classification=["two", "items"],
     )
-    assert b.classification == ["two", "items"]
+    # will be sorted
+    assert b.classification == ["items", "two"]
 
     # tuple -> list
     b = Bill(
@@ -52,7 +53,7 @@ def test_bill_type_setting():
         title="the title",
         classification=("two", "items"),
     )
-    assert b.classification == ["two", "items"]
+    assert b.classification == ["items", "two"]
 
 
 def test_basic_invalid_bill():
@@ -246,3 +247,12 @@ def test_versions():
 def test_str():
     b = toy_bill()
     assert b.identifier in str(b)
+
+
+def test_pre_save():
+    b = toy_bill()
+    b.add_subject("ZZZ")
+    b.add_subject("AAA")
+    b.add_subject("MMM")
+    b.pre_save(None)
+    assert b.subject == ["AAA", "MMM", "ZZZ"]

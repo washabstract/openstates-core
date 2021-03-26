@@ -31,7 +31,7 @@ def cleanup_list(obj, default):
         obj = [obj]
     elif not isinstance(obj, list):
         obj = list(obj)
-    return obj
+    return sorted(obj)
 
 
 def clean_whitespace(obj):
@@ -116,9 +116,9 @@ class Scraper(scrapelib.Scraper):
 
     def save_object(self, obj):
         """
-            Save object to disk as JSON.
+        Save object to disk as JSON.
 
-            Generally shouldn't be called directly.
+        Generally shouldn't be called directly.
         """
         clean_whitespace(obj)
         obj.pre_save(self.jurisdiction.jurisdiction_id)

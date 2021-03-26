@@ -25,6 +25,23 @@ def omnihash(obj):
         return hash(obj)
 
 
+def _match(dbitem, jsonitem, keys, subfield_dict):
+    # check if all keys (excluding subfields) match
+    for k in keys:
+        if k not in subfield_dict and getattr(dbitem, k) != jsonitem.get(k, None):
+            return False
+
+    # all fields match so far, possibly equal, just check subfields now
+    for k in subfield_dict:
+        jsonsubitems = jsonitem[k]
+        dbsubitems = list(getattr(dbitem, k).all())
+        if items_differ(jsonsubitems, dbsubitems, subfield_dict[k][2]):
+            return False
+
+    # if we got here, item values match
+    return True
+
+
 def items_differ(jsonitems, dbitems, subfield_dict):
     """ check whether or not jsonitems and dbitems differ """
 
@@ -43,30 +60,20 @@ def items_differ(jsonitems, dbitems, subfield_dict):
     # go over dbitems looking for matches
     for dbitem in dbitems:
         order = getattr(dbitem, "order", None)
+
         match = None
+
+        # if we have an order, we can just check one item
+        if order is not None:
+            # use original so that pop calls don't affect ordering
+            if not _match(dbitem, original_jsonitems[order], keys, subfield_dict):
+                # short circuit if there isn't a match in the right spot
+                return True
+
+        # need to get position of match to remove
         for i, jsonitem in enumerate(jsonitems):
-            # check if all keys (excluding subfields) match
-            for k in keys:
-                if k not in subfield_dict and getattr(dbitem, k) != jsonitem.get(
-                    k, None
-                ):
-                    break
-            else:
-                # all fields match so far, possibly equal, just check subfields now
-                for k in subfield_dict:
-                    jsonsubitems = jsonitem[k]
-                    dbsubitems = list(getattr(dbitem, k).all())
-                    if items_differ(jsonsubitems, dbsubitems, subfield_dict[k][2]):
-                        break
-                else:
-                    # if the dbitem sets 'order', then the order matters
-                    if order is not None and int(order) != original_jsonitems.index(
-                        jsonitem
-                    ):
-                        break
-                    # these items are equal, so let's mark it for removal
-                    match = i
-                    break
+            if _match(dbitem, jsonitem, keys, subfield_dict):
+                match = i
 
         if match is not None:
             # item exists in both, remove from jsonitems
@@ -84,7 +91,7 @@ def items_differ(jsonitems, dbitems, subfield_dict):
 
 
 class BaseImporter(object):
-    """ BaseImporter
+    """BaseImporter
 
     Override:
         get_object(data)
@@ -137,17 +144,17 @@ class BaseImporter(object):
 
     def resolve_json_id(self, json_id, allow_no_match=False):
         """
-            Given an id found in scraped JSON, return a DB id for the object.
+        Given an id found in scraped JSON, return a DB id for the object.
 
-            params:
-                json_id:        id from json
-                allow_no_match: just return None if id can't be resolved
+        params:
+            json_id:        id from json
+            allow_no_match: just return None if id can't be resolved
 
-            returns:
-                database id
+        returns:
+            database id
 
-            raises:
-                ValueError if id couldn't be resolved
+        raises:
+            ValueError if id couldn't be resolved
         """
         if not json_id:
             return None
@@ -207,7 +214,7 @@ class BaseImporter(object):
 
     def _prepare_imports(self, dicts):
 
-        """ filters the import stream to remove duplicates
+        """filters the import stream to remove duplicates
 
         also serves as a good place to override if anything special has to be done to the
         order of the import stream (see OrganizationImporter)
